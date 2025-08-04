@@ -1,20 +1,42 @@
-import numpy as np
+import numpy as np 
+
 
 def svd_2x2_singular_values(A: np.ndarray) -> tuple:
 
-    ATA = A.T @ A
-    AAT = A @ A.T
+   At = np.transpose(A)
+   AtA = At @ A
 
-    eigenvals_AAT, eigvectors_AAT = np.linalg.eigh(AAT)
-    eigenvals_ATA, eigvectors_ATA = np.linalg.eigh(ATA)
+   V = np.eye(2)
 
-    Sigma = np.sqrt(np.abs(eigenvals_AAT))
-    Sigma = np.sort(Sigma)[::-1]  
+   for _ in range(1):
+       # Compute rotation angle for a 2x2 matrix
+       if AtA[0,0] == AtA[1,1]:
+           theta = np.pi/4
+       else:
+           theta = 0.5 * np.arctan2(2 * AtA[0,1], AtA[0,0] - AtA[1,1])
+       
+       # Create rotation matrix
+       r = np.array(
+           [
+               [np.cos(theta), -np.sin(theta)],
+               [np.sin(theta), np.cos(theta)]
+               ]
+           )
+       
+       # apply rotation
+       d = np.transpose(r) @ AtA @ r
+       # update AtA
+       AtA = d
+       # accumulate v
+       V = V @ r
 
-    U = eigvectors_AAT
-    V_T = eigvectors_ATA.T
-
-    return U, Sigma, V_T
+   # sigma is the diagonal elements squared
+   S = np.sqrt([d[0,0], d[1,1]])
+   S_inv = np.array([[1/S[0], 0], [0, 1/S[1]]])
+   
+   U = A @ V @ S_inv
+   
+   return (U, S, V.T)
 
 
 a = np.array([[2, 1], [1, 2]])
